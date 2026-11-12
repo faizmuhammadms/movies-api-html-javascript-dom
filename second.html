@@ -1,0 +1,205 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Browser</title>
+</head>
+
+<body>
+
+    <div>
+        <h2>Games</h2>
+
+        <input id="searchbox" type="text" placeholder="Search game">
+
+        <button onclick="searchButton()">Search</button>
+
+        <button onclick="filterGames()">Show Shooter Games</button>
+
+        <button onclick="showAllGames()">Show All Games</button>
+
+    
+
+        <button onclick="showFavourites()">Show Favourites</button>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+
+        let apiResponse = null
+
+        let favData = JSON.parse(localStorage.getItem("data")) || []
+
+
+        // FETCH API
+
+        const getData = async () => {
+            try {
+
+                let response = await fetch("https://www.freetogame.com/api/games")
+
+                apiResponse = await response.json()
+
+                console.log(apiResponse)
+
+                showAllGames()
+
+            } catch (error) {
+                console.log(error)
+                alert("Error occurred")
+            }
+        }
+
+        getData()
+
+
+        // DISPLAY ALL GAMES
+
+        const showAllGames = () => {
+
+            if (!apiResponse) {
+             alert("Please wait, data is loading")
+            return
+            }
+
+            document.querySelector("#result").innerHTML = apiResponse.map((eachData) => `
+                <div style="display: flex; flex-direction: column; padding: 15px;">
+                    <img src="${eachData.thumbnail}" width="200">
+                    <h3>${eachData.title}</h3>
+                    <p>${eachData.genre}</p>
+                    <p>${eachData.platform}</p>
+
+                    <button onclick="addToFav(${eachData.id})">Add to Fav</button>
+                </div>
+            `).join("")
+
+        }
+
+
+        // SEARCH GAME
+
+        const searchButton = () => {
+
+            if (!apiResponse) {
+                alert("Please wait, data is loading")
+                return
+            }
+
+            let searchVal = document.querySelector("#searchbox").value
+
+           let searchData = apiResponse.find((eachData) =>
+                eachData.title === searchVal
+            )
+
+            if (!searchData) {
+                alert("Game not found")
+                return
+            }
+// displaying thes searched game
+            document.querySelector("#result").innerHTML = `
+                <div>
+                    <img src="${searchData.thumbnail}" width="200">
+                    <h3>${searchData.title}</h3>
+                    <p>${searchData.genre}</p>
+                    <p>${searchData.platform}</p>
+
+
+                    <button onclick="addToFav(${searchData.id})">Add to Fav</button>
+                </div>
+            `
+        }
+
+
+        // FILTER GAMES
+
+        const filterGames = () => {
+
+            if (!apiResponse) return
+
+            let filteredData = apiResponse.filter((eachData) =>
+                eachData.genre === "Shooter"
+            )
+
+            document.querySelector("#result").innerHTML = filteredData.map((eachData) => `
+                <div>
+                    <img src="${eachData.thumbnail}" width="200">
+                    <h3>${eachData.title}</h3>
+                    <p>${eachData.genre}</p>
+                    <p>${eachData.platform}</p>
+
+
+                    <button onclick="addToFav(${eachData.id})">Add to Fav</button>
+                </div>
+            `).join("")
+
+        }
+
+
+        // ADD TO FAVOURITES
+
+        const addToFav = (favid) => {
+ let data = apiResponse.find(eachData => eachData.id === favid)
+
+            const alreadyExists = favData.some((eachData) =>
+               eachData.id === favid
+            )
+
+            if (alreadyExists) {
+                alert("Already added to favourites")
+                return
+            }
+
+            favData.push(data)
+
+            localStorage.setItem("data", JSON.stringify(favData))
+
+            alert("Added to favourites!")
+        }
+
+
+        // SHOW FAVOURITES
+
+        const showFavourites = () => {
+
+            favData = JSON.parse(localStorage.getItem("data")) || []
+
+            document.querySelector("#result").innerHTML = favData.map((eachData) => `
+                <div style="display: flex; flex-direction: column; padding: 15px;">
+                    <img src="${eachData.thumbnail}" width="200">
+                    <h3>${eachData.title}</h3>
+                    <p>${eachData.genre}</p>
+                    <p>${eachData.platform}</p>
+
+                    <button onclick="delData(${eachData.id})">
+                        Remove
+                    </button>
+                </div>
+            `).join("")
+
+        }
+
+
+        // DELETE FAVOURITE
+
+        const delData = (dGame) => {
+
+            favData = JSON.parse(localStorage.getItem("data")) || []
+
+            let filteredData = favData.filter((eachData) =>
+                eachData.id !== dGame
+            )
+
+            localStorage.setItem("data", JSON.stringify(filteredData))
+
+            showFavourites()
+
+            alert("Deleted successfully")
+        }
+
+    </script>
+
+</body>
+</html>
